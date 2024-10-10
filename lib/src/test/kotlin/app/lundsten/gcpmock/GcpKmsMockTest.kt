@@ -3,7 +3,6 @@ package app.lundsten.gcpmock
 import com.google.cloud.kms.v1.CryptoKeyVersion
 import com.google.cloud.kms.v1.ProtectionLevel
 import com.google.protobuf.ByteString
-import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -13,6 +12,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.wiremock.grpc.dsl.GrpcResponseDefinitionBuilder
 import org.wiremock.grpc.dsl.WireMockGrpc
 import org.wiremock.grpc.dsl.WireMockGrpc.method
+import kotlin.text.Charsets.UTF_8
 
 class GcpKmsMockTest {
     companion object {
@@ -52,7 +52,7 @@ class GcpKmsMockTest {
 
         kmsMock.stubFor(
             method("Decrypt")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
         )
 
         val response = client.decrypt("name", ByteString.copyFromUtf8("my secret value"))
@@ -75,14 +75,13 @@ class GcpKmsMockTest {
         """.trimIndent()
         kmsMock.stubFor(
             method("Encrypt")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
         )
 
         val response = client.encrypt("my-key", ByteString.copyFromUtf8("content i want to encrypt"))
         assertEquals(encryptedStuff, response.ciphertext.toString(UTF_8))
         assertEquals(crc, response.ciphertextCrc32C.value)
         assertEquals("my name", response.name)
-
     }
 
     @Test
@@ -102,21 +101,19 @@ class GcpKmsMockTest {
 
         kmsMock.stubFor(
             method("DestroyCryptoKeyVersion")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
         )
 
         val response = client.destroyCryptoKeyVersion("keyId")
-        assertEquals( "name", response.name)
-        assertEquals( CryptoKeyVersion.CryptoKeyVersionState.PENDING_IMPORT, response.state)
-        assertEquals( ProtectionLevel.HSM, response.protectionLevel)
-        assertEquals( CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_DECRYPT_OAEP_3072_SHA1, response.algorithm)
-        assertEquals( "importJob", response.importJob)
-        assertEquals( "importFailureReason", response.importFailureReason)
-        assertEquals( "generationFailureReason", response.generationFailureReason)
-        assertEquals( "externalDestructionFailureReason", response.externalDestructionFailureReason)
+        assertEquals("name", response.name)
+        assertEquals(CryptoKeyVersion.CryptoKeyVersionState.PENDING_IMPORT, response.state)
+        assertEquals(ProtectionLevel.HSM, response.protectionLevel)
+        assertEquals(CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_DECRYPT_OAEP_3072_SHA1, response.algorithm)
+        assertEquals("importJob", response.importJob)
+        assertEquals("importFailureReason", response.importFailureReason)
+        assertEquals("generationFailureReason", response.generationFailureReason)
+        assertEquals("externalDestructionFailureReason", response.externalDestructionFailureReason)
     }
-
-
 
     @Test
     fun `Should be able to mock DestroyCryptoKeyVersion`() {
@@ -136,19 +133,17 @@ class GcpKmsMockTest {
 
         kmsMock.stubFor(
             method("DestroyCryptoKeyVersion")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
         )
 
         val response = client.destroyCryptoKeyVersion("keyId")
-        assertEquals( "name", response.name)
-        assertEquals( CryptoKeyVersion.CryptoKeyVersionState.PENDING_IMPORT, response.state)
-        assertEquals( ProtectionLevel.HSM, response.protectionLevel)
-        assertEquals( CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_DECRYPT_OAEP_3072_SHA1, response.algorithm)
-        assertEquals( "importJob", response.importJob)
-        assertEquals( "importFailureReason", response.importFailureReason)
-        assertEquals( "generationFailureReason", response.generationFailureReason)
-        assertEquals( "externalDestructionFailureReason", response.externalDestructionFailureReason)
+        assertEquals("name", response.name)
+        assertEquals(CryptoKeyVersion.CryptoKeyVersionState.PENDING_IMPORT, response.state)
+        assertEquals(ProtectionLevel.HSM, response.protectionLevel)
+        assertEquals(CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_DECRYPT_OAEP_3072_SHA1, response.algorithm)
+        assertEquals("importJob", response.importJob)
+        assertEquals("importFailureReason", response.importFailureReason)
+        assertEquals("generationFailureReason", response.generationFailureReason)
+        assertEquals("externalDestructionFailureReason", response.externalDestructionFailureReason)
     }
-
-
 }
