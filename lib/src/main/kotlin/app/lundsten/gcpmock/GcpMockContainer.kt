@@ -18,14 +18,16 @@ import org.wiremock.grpc.dsl.WireMockGrpcService
 class GcpMockContainer(
     dockerImageName: String = "wiremock-gcp-grpc:latest",
     verbose: Boolean = false,
+    wiremockConfigs: List<String> = emptyList(),
 ) :
     GenericContainer<GcpMockContainer>(dockerImageName) {
 
     init {
         withExposedPorts(8080)
-        if (verbose) {
+        if (verbose && !wiremockConfigs.contains("--verbose")) {
             addWiremockConfig("--verbose")
         }
+        wiremockConfigs.forEach { addWiremockConfig(it) }
     }
 
     override fun start() {
@@ -46,7 +48,7 @@ class GcpMockContainer(
         cleanWiremockSettings()
     }
 
-    fun waitForStartMessage(
+    private fun waitForStartMessage(
         timeout: LocalDateTime = LocalDateTime.now().plusSeconds(30),
     ): String {
         while (timeout > LocalDateTime.now()) {
