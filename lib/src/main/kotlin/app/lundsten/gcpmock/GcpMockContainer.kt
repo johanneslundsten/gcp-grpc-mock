@@ -9,14 +9,51 @@ import com.google.cloud.kms.v1.KeyManagementServiceSettings
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient
 import com.google.cloud.secretmanager.v1.SecretManagerServiceSettings
 import io.grpc.ManagedChannelBuilder
+import java.lang.Thread.sleep
+import java.time.LocalDateTime
+import java.util.concurrent.TimeoutException
 import org.testcontainers.containers.GenericContainer
 import org.wiremock.grpc.dsl.WireMockGrpcService
 
 class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc:latest") :
     GenericContainer<GcpMockContainer>(dockerImageName) {
+
     init {
         withExposedPorts(8080)
     }
+
+    override fun start() {
+        super.start()
+        val startMessage = waitForStartMessage()
+        this.wiremockVersion = "version:\\s*(\\d+\\.\\d+\\.\\d+)".toRegex()
+            .find(startMessage)
+            .let { it?.groups?.get(1)?.value ?: throw RuntimeException("Could not find version") }
+        this.isVerbose = "verbose:\\s*(true|false)".toRegex()
+            .find(startMessage)
+            .let { it?.groups?.get(1)?.value?.toBoolean() ?: throw RuntimeException("Could not find verbose") }
+    }
+
+    override fun stop() {
+        super.stop()
+        cleanWiremockSettings()
+    }
+
+    fun waitForStartMessage(
+        timeout: LocalDateTime = LocalDateTime.now().plusSeconds(30),
+    ): String {
+        while (timeout > LocalDateTime.now()) {
+            val logs = logs
+            if (logs.contains("version:\\s*(\\d+\\.\\d+\\.\\d+)".toRegex())) {
+                return logs
+            }
+            sleep(100)
+        }
+
+        throw TimeoutException("Get start message timed out")
+    }
+
+    var isVerbose: Boolean? = null
+    var wiremockVersion: String? = null
 
     private val channelProvider by lazy {
         assertRunning()
@@ -38,8 +75,15 @@ class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc:latest") :
                     .also { it.add("$wiremockOptions --verbose") }
             }
         } else {
-            env.add("WIREMOCK_OPTIONS=--verbose")
+            env = env.toMutableList().also { it.add("WIREMOCK_OPTIONS=--verbose") }
         }
+    }
+
+    private fun cleanWiremockSettings() {
+        assertNotRunning()
+        this.wiremockVersion = null
+        this.isVerbose = null
+        env = env.filter { !it.contains("WIREMOCK_OPTIONS") }
     }
 
     fun createSecretManagerMock(): WireMockGrpcService {
