@@ -15,11 +15,17 @@ import java.util.concurrent.TimeoutException
 import org.testcontainers.containers.GenericContainer
 import org.wiremock.grpc.dsl.WireMockGrpcService
 
-class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc") :
+class GcpMockContainer(
+    dockerImageName: String = "wiremock-gcp-grpc:latest",
+    verbose: Boolean = false,
+) :
     GenericContainer<GcpMockContainer>(dockerImageName) {
 
     init {
         withExposedPorts(8080)
+        if (verbose) {
+            addWiremockConfig("--verbose")
+        }
     }
 
     override fun start() {
@@ -35,6 +41,8 @@ class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc") :
 
     override fun stop() {
         super.stop()
+        this.wiremockVersion = null
+        this.isVerbose = null
         cleanWiremockSettings()
     }
 
@@ -63,26 +71,24 @@ class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc") :
         )
     }
 
-    fun activateVerboseLogging() {
+    private fun addWiremockConfig(config: String) {
         assertNotRunning()
         val wiremockOptions = env.firstOrNull() { it.contains("WIREMOCK_OPTIONS") }
 
         if (wiremockOptions != null) {
-            if (!wiremockOptions.contains("--verbose")) {
+            if (!wiremockOptions.contains(config)) {
                 env = env
                     .filter { it != wiremockOptions }
                     .toMutableList()
-                    .also { it.add("$wiremockOptions --verbose") }
+                    .also { it.add("$wiremockOptions $config") }
             }
         } else {
-            env = env.toMutableList().also { it.add("WIREMOCK_OPTIONS=--verbose") }
+            env = env.toMutableList().also { it.add("WIREMOCK_OPTIONS=$config") }
         }
     }
 
     private fun cleanWiremockSettings() {
         assertNotRunning()
-        this.wiremockVersion = null
-        this.isVerbose = null
         env = env.filter { !it.contains("WIREMOCK_OPTIONS") }
     }
 
