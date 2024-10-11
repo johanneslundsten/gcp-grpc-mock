@@ -30,6 +30,13 @@ class GcpMockContainerTest {
     }
 
     @Test
+    fun `Should set wiremock version at start`() {
+        assertNull(container.wiremockVersion)
+        container.start()
+        assertNotNull(container.wiremockVersion)
+    }
+
+    @Test
     fun `Should be able to activate verbose`() {
         container.activateVerboseLogging()
         container.start()
