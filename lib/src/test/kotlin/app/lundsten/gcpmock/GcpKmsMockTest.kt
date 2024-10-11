@@ -3,7 +3,9 @@ package app.lundsten.gcpmock
 import com.google.cloud.kms.v1.CryptoKeyVersion
 import com.google.cloud.kms.v1.ProtectionLevel
 import com.google.protobuf.ByteString
+import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -12,7 +14,6 @@ import org.testcontainers.junit.jupiter.Container
 import org.wiremock.grpc.dsl.GrpcResponseDefinitionBuilder
 import org.wiremock.grpc.dsl.WireMockGrpc
 import org.wiremock.grpc.dsl.WireMockGrpc.method
-import kotlin.text.Charsets.UTF_8
 
 class GcpKmsMockTest {
     companion object {
@@ -36,6 +37,11 @@ class GcpKmsMockTest {
     private val kmsMock = container.createKmsServiceMock()
     private val client = container.createKmsClient()
 
+    @AfterEach
+    fun resetMock() {
+        kmsMock.resetAll()
+    }
+
     @Test
     fun `Should be able to mock with decrypt`() {
         val secretValue = "my secret value"
@@ -52,7 +58,7 @@ class GcpKmsMockTest {
 
         kmsMock.stubFor(
             method("Decrypt")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
         )
 
         val response = client.decrypt("name", ByteString.copyFromUtf8("my secret value"))
@@ -75,7 +81,7 @@ class GcpKmsMockTest {
         """.trimIndent()
         kmsMock.stubFor(
             method("Encrypt")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
         )
 
         val response = client.encrypt("my-key", ByteString.copyFromUtf8("content i want to encrypt"))
@@ -101,7 +107,7 @@ class GcpKmsMockTest {
 
         kmsMock.stubFor(
             method("DestroyCryptoKeyVersion")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
         )
 
         val response = client.destroyCryptoKeyVersion("keyId")
@@ -133,7 +139,7 @@ class GcpKmsMockTest {
 
         kmsMock.stubFor(
             method("DestroyCryptoKeyVersion")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
         )
 
         val response = client.destroyCryptoKeyVersion("keyId")

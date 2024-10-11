@@ -1,7 +1,11 @@
 package app.lundsten.gcpmock
 
 import com.google.api.gax.rpc.FailedPreconditionException
+import kotlin.text.Charsets.UTF_8
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTime
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
@@ -11,9 +15,6 @@ import org.testcontainers.junit.jupiter.Container
 import org.wiremock.grpc.dsl.GrpcResponseDefinitionBuilder
 import org.wiremock.grpc.dsl.WireMockGrpc
 import org.wiremock.grpc.dsl.WireMockGrpc.method
-import kotlin.text.Charsets.UTF_8
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.measureTime
 
 class GcpSecretManagerMockTest {
     companion object {
@@ -34,8 +35,13 @@ class GcpSecretManagerMockTest {
         }
     }
 
-    private val secretManagementService = container.createSecretManagerMock()
+    private val secretManagementServiceMock = container.createSecretManagerMock()
     private val secretManagerClient = container.createSecretManagerClient()
+
+    @AfterEach
+    fun resetMock() {
+        secretManagementServiceMock.resetAll()
+    }
 
     @Test
     fun `Should be able to set delay`() {
@@ -50,12 +56,12 @@ class GcpSecretManagerMockTest {
             }
         """.trimIndent()
 
-        secretManagementService.stubFor(
+        secretManagementServiceMock.stubFor(
             method("AccessSecretVersion")
                 .willReturn(
                     GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)
-                        .withFixedDelay(1001)
-                )
+                        .withFixedDelay(1001),
+                ),
         )
 
         val duration = measureTime {
@@ -79,9 +85,9 @@ class GcpSecretManagerMockTest {
             }
         """.trimIndent()
 
-        secretManagementService.stubFor(
+        secretManagementServiceMock.stubFor(
             method("AccessSecretVersion")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json))
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.OK).fromJson(json)),
         )
 
         val accessSecretVersion = secretManagerClient.accessSecretVersion("my-secret")
@@ -90,9 +96,9 @@ class GcpSecretManagerMockTest {
 
     @Test
     fun `Should be able to respond with a fault`() {
-        secretManagementService.stubFor(
+        secretManagementServiceMock.stubFor(
             method("AccessSecretVersion")
-                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.FAILED_PRECONDITION))
+                .willReturn(GrpcResponseDefinitionBuilder(WireMockGrpc.Status.FAILED_PRECONDITION)),
         )
 
         assertThrows<FailedPreconditionException> { secretManagerClient.accessSecretVersion("my-secret") }

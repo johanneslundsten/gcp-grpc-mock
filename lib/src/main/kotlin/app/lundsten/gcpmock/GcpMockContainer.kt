@@ -18,15 +18,16 @@ class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc:latest") :
         withExposedPorts(8080)
     }
 
-    val channelProvider by lazy {
+    private val channelProvider by lazy {
         assertRunning()
         val channel = ManagedChannelBuilder.forTarget("localhost:$firstMappedPort").usePlaintext().build()
         FixedTransportChannelProvider.create(
-            GrpcTransportChannel.create(channel)
+            GrpcTransportChannel.create(channel),
         )
     }
 
     fun activateVerboseLogging() {
+        assertNotRunning()
         val wiremockOptions = env.firstOrNull() { it.contains("WIREMOCK_OPTIONS") }
 
         if (wiremockOptions != null) {
@@ -45,7 +46,7 @@ class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc:latest") :
         assertRunning()
         return WireMockGrpcService(
             WireMock(firstMappedPort),
-            "google.cloud.secretmanager.v1.SecretManagerService"
+            "google.cloud.secretmanager.v1.SecretManagerService",
         )
     }
 
@@ -53,12 +54,12 @@ class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc:latest") :
         assertRunning()
         return WireMockGrpcService(
             WireMock(firstMappedPort),
-            "google.cloud.kms.v1.KeyManagementService"
+            "google.cloud.kms.v1.KeyManagementService",
         )
     }
 
     fun createSecretManagerClient(
-        builder: SecretManagerServiceSettings.Builder = SecretManagerServiceSettings.newBuilder()
+        builder: SecretManagerServiceSettings.Builder = SecretManagerServiceSettings.newBuilder(),
     ): SecretManagerServiceClient {
         val settings = builder
             .setTransportChannelProvider(channelProvider)
@@ -68,7 +69,7 @@ class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc:latest") :
     }
 
     fun createKmsClient(
-        builder: KeyManagementServiceSettings.Builder = KeyManagementServiceSettings.newBuilder()
+        builder: KeyManagementServiceSettings.Builder = KeyManagementServiceSettings.newBuilder(),
     ): KeyManagementServiceClient {
         val settings = builder
             .setTransportChannelProvider(channelProvider)

@@ -17,8 +17,9 @@ dependencies {
     implementation("com.google.cloud:google-cloud-secretmanager")
     implementation("com.google.cloud:google-cloud-kms")
 
-    implementation("org.testcontainers:testcontainers:1.19.0")
+    implementation("org.testcontainers:testcontainers:1.20.2")
     implementation("org.wiremock:wiremock-grpc-extension:0.8.1")
+    implementation("ch.qos.logback:logback-classic:1.5.9")
 
     testImplementation("org.testcontainers:junit-jupiter:1.19.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
