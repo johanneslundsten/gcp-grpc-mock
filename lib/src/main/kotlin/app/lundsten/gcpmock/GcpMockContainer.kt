@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException
 import org.testcontainers.containers.GenericContainer
 import org.wiremock.grpc.dsl.WireMockGrpcService
 
-class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc:latest") :
+class GcpMockContainer(dockerImageName: String = "wiremock-gcp-grpc") :
     GenericContainer<GcpMockContainer>(dockerImageName) {
 
     init {
